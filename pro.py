@@ -26,7 +26,8 @@ while True:
                 mp_hands.HAND_CONNECTIONS
             )
 
-            #testing branch code
+            for i, hand_landmark in enumerate(hand_landmarks.landmark):
+                print(f"Landmark {i}: X: {hand_landmark.x}, Y: {hand_landmark.y}, Z: {hand_landmark.z}")
 
     cv2.imshow("Hand Landmark Test", frame)
 

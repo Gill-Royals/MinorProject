@@ -26,8 +26,7 @@ while True:
                 mp_hands.HAND_CONNECTIONS
             )
 
-            # Debug: count landmarks
-            print(len(hand_landmarks.landmark))  # should print 21
+            #testing branch code
 
     cv2.imshow("Hand Landmark Test", frame)
 

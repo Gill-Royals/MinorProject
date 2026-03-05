@@ -34,7 +34,7 @@ while True:
                 hand_landmarks,             #draws landmarks
                 mp_hands.HAND_CONNECTIONS   #draws connections
             )
-
+             
             #prints coordiantes for each landmark :3
             #for i, hand_landmark in enumerate(hand_landmarks.landmark):
             #    print(f"Landmark {i}: X: {hand_landmark.x}, Y: {hand_landmark.y}, Z: {hand_landmark.z}")       
@@ -80,7 +80,7 @@ while True:
             for hand_landmarks in result.multi_hand_landmarks:
                 for i, hand_landmark in enumerate(hand_landmarks.landmark):
                     csv_writer.writerow([5, i, hand_landmark.x, hand_landmark.y, hand_landmark.z])  #writes gesture label and coordinates to csv file
-        print("Saving for gesture 51") 
+        print("Saving for gesture 5") 
     elif key== ord('q'):
         break
 csv_file.close()   #closes the csv file

@@ -14,9 +14,8 @@ mp_draw = mp.solutions.drawing_utils
 cap = cv2.VideoCapture(0)
 
 #creates a csv file to store the data
-csv_file=open("hand_gesture_data.csv", mode="w", newline="")
+csv_file=open("hand_gesture_data.csv", mode="a", newline="")
 csv_writer = csv.writer(csv_file)
-csv_writer.writerow(["Gesture", "Landmark", "X", "Y", "Z"])  # Header row
 
 #runs until loop broken by user
 while True:
@@ -37,8 +36,8 @@ while True:
             )
 
             #prints coordiantes for each landmark :3
-            for i, hand_landmark in enumerate(hand_landmarks.landmark):
-                print(f"Landmark {i}: X: {hand_landmark.x}, Y: {hand_landmark.y}, Z: {hand_landmark.z}")       
+            #for i, hand_landmark in enumerate(hand_landmarks.landmark):
+            #    print(f"Landmark {i}: X: {hand_landmark.x}, Y: {hand_landmark.y}, Z: {hand_landmark.z}")       
             
          
 
@@ -49,8 +48,41 @@ while True:
     
     if key== ord('1'):
         print("Collecting data for gesture 1")
+        if result.multi_hand_landmarks:
+            for hand_landmarks in result.multi_hand_landmarks:
+                for i, hand_landmark in enumerate(hand_landmarks.landmark):
+                    csv_writer.writerow([1, i, hand_landmark.x, hand_landmark.y, hand_landmark.z])  #writes gesture label and coordinates to csv file
+        print("Saving for gesture 1")
+    elif key== ord('2'):
+        print("Collecting data for gesture 2")
+        if result.multi_hand_landmarks:
+            for hand_landmarks in result.multi_hand_landmarks:
+                for i, hand_landmark in enumerate(hand_landmarks.landmark):
+                    csv_writer.writerow([2, i, hand_landmark.x, hand_landmark.y, hand_landmark.z])  #writes gesture label and coordinates to csv file
+        print("Saving for gesture 2")
+    elif key== ord('3'):
+        print("Collecting data for gesture 3")
+        if result.multi_hand_landmarks:
+            for hand_landmarks in result.multi_hand_landmarks:
+                for i, hand_landmark in enumerate(hand_landmarks.landmark):
+                    csv_writer.writerow([3, i, hand_landmark.x, hand_landmark.y, hand_landmark.z])  #writes gesture label and coordinates to csv file
+        print("Saving for gesture 3")
+    elif key==ord('4'):
+        print("collecting data for gesture 4")
+        if result.multi_hand_landmarks:
+            for hand_landmarks in result.multi_hand_landmarks:
+                for i, hand_landmark in enumerate(hand_landmarks.landmark):
+                    csv_writer.writerow([4, i, hand_landmark.x, hand_landmark.y, hand_landmark.z])  #writes gesture label and coordinates to csv file
+        print("Saving for gesture 4")
+    elif key==ord('5'):
+        print("collecting data for gesture 5")
+        if result.multi_hand_landmarks:
+            for hand_landmarks in result.multi_hand_landmarks:
+                for i, hand_landmark in enumerate(hand_landmarks.landmark):
+                    csv_writer.writerow([5, i, hand_landmark.x, hand_landmark.y, hand_landmark.z])  #writes gesture label and coordinates to csv file
+        print("Saving for gesture 51") 
     elif key== ord('q'):
         break
-
+csv_file.close()   #closes the csv file
 cap.release()
 cv2.destroyAllWindows()

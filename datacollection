@@ -14,7 +14,7 @@ mp_draw = mp.solutions.drawing_utils
 cap = cv2.VideoCapture(0)
 
 #creates a csv file to store the data
-csv_file=open("hand_gesture_data.csv", mode="a", newline="")
+csv_file=open("data/hand_gesture_data.csv", mode="a", newline="")
 csv_writer = csv.writer(csv_file)
 
 #runs until loop broken by user

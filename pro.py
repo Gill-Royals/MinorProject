@@ -1,14 +1,16 @@
 import cv2
 import mediapipe as mp
+import joblib
+import numpy as np
 
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(
-    static_image_mode=False,
+    static_image_mode=False,    
     max_num_hands=1,
     min_detection_confidence=0.7
 )
 mp_draw = mp.solutions.drawing_utils
-
+model = joblib.load('models/gesture_model.pkl')
 cap = cv2.VideoCapture(0)
 
 while True:
@@ -21,13 +23,19 @@ while True:
     if result.multi_hand_landmarks:
         for hand_landmarks in result.multi_hand_landmarks:
             mp_draw.draw_landmarks(
-                frame,
-                hand_landmarks,
-                mp_hands.HAND_CONNECTIONS
+                frame,hand_landmarks,mp_hands.HAND_CONNECTIONS
             )
+            coords = []
+            for lm in hand_landmarks.landmark:
+                coords.extend([lm.x, lm.y, lm.z])
+            
+            coords = np.array(coords).reshape(1, -1)
+            prediction = model.predict(coords)
+            print(prediction[0])
 
-            for i, hand_landmark in enumerate(hand_landmarks.landmark):
-                print(f"Landmark {i}: X: {hand_landmark.x}, Y: {hand_landmark.y}, Z: {hand_landmark.z}")
+            # Display on screen
+            cv2.putText(frame, f"Gesture: {prediction[0]}", (10, 50),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
     cv2.imshow("Hand Landmark Test", frame)
 

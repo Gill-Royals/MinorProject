@@ -1,0 +1,48 @@
+HAND GESTURE RECCOGNISTION SYSTEM-
+This reccognises the gesters we make by hand and converts them into readable text and sentences. goal is to build a app that bridges the gap btw the impared and a adle bodied human
+
+First the camera detects the hand present and marks the landmarks at each of the node of our hand and connects those nodes with lines. it then takes all the coordinates of the nodes and feed it into a model that give the predicted output of the gesture. then this output goes into a databse and its stored there . The  data stored in that is then feeded into another ai which then gives words and sentences as output. This output is then stored and outputted on the main program. 
+
+FOR MINOR PROJECT-
+The first model will convert the gestures (A-Z,0-9, and 5-6 common gestures like thumbs up etc) into characters and store them in the database charater by character and 2nd ai at the database will covert those caracter and put spaces btw different words and get those words into the main program as output.
+
+FOR MAJOR PROJECT-
+the first model will be improved to also include more gestures which will make direct words and the 2nd ai model will also make sentence as well as give grammer and context of the the text given by the first model. 
+
+Things done-
+- [x] Real time hand detection using MediaPipe and OpenCV
+- [x] 21 landmark coordinate extraction and printing
+- [x] Data collection script for gesture samples
+- [x] CSV dataset created with 1314 samples across 5 gestures
+- [x] Project folder structure setup on GitHub
+
+Things left to do-
+- [ ] Train ML model on collected data
+- [ ] Real time gesture prediction
+- [ ] Database setup and pipeline
+- [ ] AI integration for sentence formation
+- [ ] Full A-Z and 0-9 gesture data collection
+- [ ] Final UI and output display
+
+Thing currently being workked on-
+Training a model using RandomForest on the collected data
+
+Tech Stack=
+
+Languages-
+-Python 3.11
+
+Libraries
+- OpenCV — camera access and frame processing
+- MediaPipe — hand detection and 21 landmark extraction
+- NumPy — numerical data handling
+- Pandas — data loading and processing
+- Scikit-learn — ML model training and testing
+- Joblib — saving and loading trained model
+- CSV — writing gesture data to file
+
+Tools
+- VS Code — code editor
+- Git — version control
+- GitHub — project repository and collaboration
+- GitLens — Git management inside VS Code

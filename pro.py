@@ -19,7 +19,8 @@ while True:
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     result = hands.process(rgb)
-
+    panel = np.zeros((frame.shape[0],300,3),dtype=np.uint8)
+    panel[:] = (64, 61, 61)
     if result.multi_hand_landmarks:
         for hand_landmarks in result.multi_hand_landmarks:
             mp_draw.draw_landmarks(
@@ -34,10 +35,11 @@ while True:
             print(prediction[0])
 
             # Display on screen
-            cv2.putText(frame, f"Gesture: {prediction[0]}", (10, 50),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-    cv2.imshow("Hand Landmark Test", frame)
+            cv2.putText(panel, f"Gesture: {prediction[0]}", (10, 50),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255 , 255, 255), 1)
+ 
+    combined=np.hstack((frame,panel))
+    cv2.imshow("Hand Landmark Test", combined)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break

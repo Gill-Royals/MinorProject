@@ -4,7 +4,7 @@ import joblib
 import numpy as np
 from collections import deque
 
-# Initialize MediaPipe
+# MediaPipe
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(
     static_image_mode=False,
@@ -14,13 +14,13 @@ hands = mp_hands.Hands(
 
 mp_draw = mp.solutions.drawing_utils
 
-# Load trained model
-model = joblib.load('gesture_model.pkl')
+# Load model
+model = joblib.load("gesture_model_letters.pkl")
 
 # Webcam
 cap = cv2.VideoCapture(0)
 
-#  Prediction smoothing (reduces flicker)
+# Smooth prediction
 history = deque(maxlen=5)
 
 while True:
@@ -40,14 +40,9 @@ while True:
     if result.multi_hand_landmarks:
         for hand_landmarks in result.multi_hand_landmarks:
 
-            # Draw landmarks
-            mp_draw.draw_landmarks(
-                frame,
-                hand_landmarks,
-                mp_hands.HAND_CONNECTIONS
-            )
+            mp_draw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-            # SAME FEATURE LOGIC AS TRAINING
+            # Same feature logic
             base_x = hand_landmarks.landmark[0].x
             base_y = hand_landmarks.landmark[0].y
             base_z = hand_landmarks.landmark[0].z
@@ -62,19 +57,18 @@ while True:
 
             coords = np.array(coords).reshape(1, -1)
 
-            # Prediction
             prediction = model.predict(coords)[0]
             prob = model.predict_proba(coords)
             confidence = np.max(prob) * 100
 
-            #  Smooth prediction
+            # Smooth output
             history.append(prediction)
-            final_prediction = max(set(history), key=history.count)
+            final_pred = max(set(history), key=history.count)
 
-            print(f"{final_prediction} - {confidence:.2f}%")
+            print(f"{final_pred} - {confidence:.2f}%")
 
-            # Display (plain white text)
-            cv2.putText(panel, f"Gesture: {final_prediction}",
+            # Display
+            cv2.putText(panel, f"Letter: {final_pred}",
                         (10, 60),
                         cv2.FONT_HERSHEY_SIMPLEX,
                         1,
@@ -96,9 +90,8 @@ while True:
                     (255, 255, 255),
                     2)
 
-    # Combine webcam + panel
     combined = np.hstack((frame, panel))
-    cv2.imshow("Hand Gesture Recognition", combined)
+    cv2.imshow("A-Z Gesture Recognition", combined)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break

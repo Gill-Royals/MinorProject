@@ -15,7 +15,7 @@ hands = mp_hands.Hands(
 mp_draw = mp.solutions.drawing_utils
 
 # Load trained model
-model = joblib.load('gesture_model.pkl')
+model = joblib.load('Models/gesture_model.pkl')
 
 # Webcam
 cap = cv2.VideoCapture(0)

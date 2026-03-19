@@ -17,7 +17,7 @@ mp_draw = mp.solutions.drawing_utils
 cap = cv2.VideoCapture(0)
 
 # Create CSV file if not exists
-file_name = "h_g_d.csv"
+file_name = "Data/h_g_d.csv"
 file_exists = os.path.isfile(file_name)
 
 csv_file = open(file_name, mode="a", newline="")

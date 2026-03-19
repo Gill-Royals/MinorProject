@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score, classification_report
 import joblib
 
 # Load dataset
-data = pd.read_csv("h_g_d_letters.csv", header=None)
+data = pd.read_csv("Data/h_g_d_letters.csv", header=None)
 
 # Features & labels
 X = data.iloc[:, :-1]
@@ -33,5 +33,5 @@ print("📊 Classification Report:\n")
 print(classification_report(y_test, y_pred))
 
 # Save model
-joblib.dump(model, "gesture_model_letters.pkl")
+joblib.dump(model, "Models/gesture_model_letters.pkl")
 print("💾 Model saved as gesture_model_letters.pkl")

@@ -17,7 +17,7 @@ mp_draw = mp.solutions.drawing_utils
 cap = cv2.VideoCapture(0)
 
 # CSV file
-file_name = "h_g_d_letters.csv"
+file_name = "Data/h_g_d_letters.csv"
 csv_file = open(file_name, mode="a", newline="")
 csv_writer = csv.writer(csv_file)
 

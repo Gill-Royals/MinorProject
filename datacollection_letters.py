@@ -26,7 +26,7 @@ print("Press Q to quit")
 
 # Count samples
 sample_count = {chr(i): 0 for i in range(ord('A'), ord('Z')+1)}
-
+sample_count['Thumbs Up'] =0
 while True:
     success, frame = cap.read()
     if not success:
@@ -58,6 +58,29 @@ while True:
     key = cv2.waitKey(1) & 0xFF
 
     # A-Z detection
+    if key in [ord('1')]:
+        label = 'Thumbs Up'
+
+        if result.multi_hand_landmarks:
+            for hand_landmarks in result.multi_hand_landmarks:
+                coords = []
+
+                # Use wrist as reference (relative coords)
+                base_x = hand_landmarks.landmark[0].x
+                base_y = hand_landmarks.landmark[0].y
+                base_z = hand_landmarks.landmark[0].z
+
+                for lm in hand_landmarks.landmark:
+                    coords.extend([
+                        lm.x - base_x,
+                        lm.y - base_y,
+                        lm.z - base_z
+                    ])
+
+                coords.append(label)
+                csv_writer.writerow(coords)
+
+                sample_count[label] += 1
     if (ord('A') <= key <= ord('Z')) or (ord('a') <= key <= ord('z')):
         label = chr(key).upper()
 

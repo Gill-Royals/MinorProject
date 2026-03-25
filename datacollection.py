@@ -27,6 +27,7 @@ print("Press keys 0–9 to collect gestures")
 print("Press 'q' to quit")
 
 sample_count = {str(i): 0 for i in range(10)}
+sample_count['Thumbs Up'] = 0
 
 while True:
     success, frame = cap.read()
@@ -68,6 +69,31 @@ while True:
     key = cv2.waitKey(1) & 0xFF
 
     # If number key pressed (0–9)
+    if key in [ord('t')]:
+        label = 'Thumbs Up'
+
+        if result.multi_hand_landmarks:
+            for hand_landmarks in result.multi_hand_landmarks:
+                coords = []
+
+                # Use wrist as reference (relative coords)
+                base_x = hand_landmarks.landmark[0].x
+                base_y = hand_landmarks.landmark[0].y
+                base_z = hand_landmarks.landmark[0].z
+
+                for lm in hand_landmarks.landmark:
+                    coords.extend([
+                        lm.x - base_x,
+                        lm.y - base_y,
+                        lm.z - base_z
+                    ])
+
+                coords.append(label)
+                csv_writer.writerow(coords)
+
+                sample_count[label] += 1
+
+            print(f"Saved gesture {label} | Total: {sample_count[label]}")
     if key in [ord(str(i)) for i in range(10)]:
         label = chr(key)
 

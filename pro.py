@@ -3,6 +3,7 @@ import mediapipe as mp
 import joblib
 import numpy as np
 from collections import deque
+import time
 
 class Mediapipe:
     def __init__(self):
@@ -13,20 +14,37 @@ class Mediapipe:
             min_detection_confidence=0.7
         )
         self.mp_draw = mp.solutions.drawing_utils
-# Initialize MediaPipe
-#mp_hands = mp.solutions.hands
-#hands = mp_hands.Hands(
-#    static_image_mode=False,
-#    max_num_hands=1,
-#    min_detection_confidence=0.7
-#)
-#mp_draw = mp.solutions.drawing_utils
+
 
 # Load trained model
 class ModelLoader:
     def __init__(self):
-        self.model = joblib.load('Models/gesture_model.pkl')
-#model = joblib.load('Models/gesture_model.pkl')
+        model_num='Models/gesture_model.pkl'
+        model_let='Models/gesture_model_letters.pkl'
+
+        self.model_letters = joblib.load(model_let)
+        self.model_numbers = joblib.load(model_num)
+
+        self.active = self.model_numbers
+        self.mode = 'NUMBERS'
+
+        self.flag = False
+    
+    def Check(self, final_prediction):
+        current_time= time.time()
+        if final_prediction == 'Thumbs Up' and not self.flag:
+            self.flag=True
+            if self.active== self.model_numbers:
+                self.active = self.model_letters
+                self.mode = 'LETTERS'
+            elif self.active == self.model_letters:
+                self.active = self.model_numbers
+                self.mode = 'NUMBERS'
+        elif final_prediction!='Thumbs Up':
+            self.flag=False      
+        return self.mode
+            
+            
 
 # Webcam
 class Webcam:
@@ -44,101 +62,117 @@ class Webcam:
     def release(self):
         self.cap.release()
         
-#cap = cv2.VideoCapture(0)
+
 
 #  Prediction smoothing (reduces flicker)
-class PredictionSmoother:
+class Prediction:
     def __init__(self):
         self.history = deque(maxlen=5)
+
+    def calculation(self,coords,model):
+            self.prediction = model.predict(coords)[0]
+            self.prob = model.predict_proba(coords)
+            self.confidence = np.max(self.prob) * 100
+            return self.prediction,self.confidence
 
     def smooth(self, prediction):
         self.history.append(prediction)
         final_prediction = max(set(self.history), key=self.history.count)
         return final_prediction
-#history = deque(maxlen=5)
-smooth = PredictionSmoother()
 
+class window:
+    def __init__(self):
+        self.panel = np.zeros((480, 300, 3), dtype=np.uint8)
+        self.panel[:] = (40, 40, 40)
+
+    def handDetected(self,frame,final_prediction,confidence,mode):
+        self.panel[:] = (40, 40, 40)
+        cv2.putText(self.panel, f"Gesture: {final_prediction}",(10, 60),cv2.FONT_HERSHEY_SIMPLEX,1,(255, 255, 255),2)
+
+        cv2.putText(self.panel, f"Confidence: {confidence:.2f}%",(10, 120),cv2.FONT_HERSHEY_SIMPLEX,0.8,(255, 255, 255),2)
         
-while True:
-    success, frame = cap.read() 
-    if not success:
-        break 
+        cv2.putText(self.panel,f"Mode: {mode}",(10,180),cv2.FONT_HERSHEY_SIMPLEX,0.8,(255, 255, 255),2)
+    def switching(self):
+        self.panel[:] = (40,40,40)
+        cv2.putText(self.panel, f"Switching Modes....",(10, 60),cv2.FONT_HERSHEY_SIMPLEX,0.8,(255, 255, 255),2)
+                       
 
+    def nohand(self):
+        self.panel[:] = (40, 40, 40)
+        cv2.putText(self.panel, "No Hand Detected",(10, 80),cv2.FONT_HERSHEY_SIMPLEX,0.8,(255, 255, 255),2)
+
+    def show(self, frame):
+        combined = np.hstack((frame, self.panel))
+        cv2.imshow("Hand Gesture Recognition", combined)
+
+class landmarks:
+    def __init__(self,hand_landmarks,mp_draw,mp_hands,frame):
+        mp_draw.draw_landmarks(
+                frame,
+                hand_landmarks,
+                mp_hands.HAND_CONNECTIONS
+        )
+    def logic(self,hand_landmarks):
+        base_x = hand_landmarks.landmark[0].x
+        base_y = hand_landmarks.landmark[0].y
+        base_z = hand_landmarks.landmark[0].z
+
+        coords = []
+        for lm in hand_landmarks.landmark:
+            coords.extend([
+                lm.x - base_x,
+                lm.y - base_y,
+                lm.z - base_z
+            ])
+
+        coords = np.array(coords).reshape(1, -1)
+        return coords
+
+
+mp_object = Mediapipe()
+model_loader = ModelLoader()
+cam = Webcam()
+hands = mp_object.hands
+mp_draw = mp_object.mp_draw
+mp_hands = mp_object.mp_hands
+smooth = Prediction()
+window = window()
+
+
+
+
+while True:
+
+    frame = cam.frame()
     frame = cv2.flip(frame, 1)
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     result = hands.process(rgb)
 
-    # Side panel
-    panel = np.zeros((frame.shape[0], 300, 3), dtype=np.uint8)
-    panel[:] = (40, 40, 40)
-
     if result.multi_hand_landmarks:
         for hand_landmarks in result.multi_hand_landmarks:
 
-            # Draw landmarks
-            mp_draw.draw_landmarks(
-                frame,
-                hand_landmarks,
-                mp_hands.HAND_CONNECTIONS
-            )
+            landmark = landmarks(hand_landmarks,mp_draw,mp_hands,frame)
 
-            # SAME FEATURE LOGIC AS TRAINING
-            base_x = hand_landmarks.landmark[0].x
-            base_y = hand_landmarks.landmark[0].y
-            base_z = hand_landmarks.landmark[0].z
+            coords = landmark.logic(hand_landmarks)
 
-            coords = []
-            for lm in hand_landmarks.landmark:
-                coords.extend([
-                    lm.x - base_x,
-                    lm.y - base_y,
-                    lm.z - base_z
-                ])
+            prediction, confidence = smooth.calculation(coords,model_loader.active)
 
-            coords = np.array(coords).reshape(1, -1)
-
-            # Prediction
-            prediction = model.predict(coords)[0]
-            prob = model.predict_proba(coords)
-            confidence = np.max(prob) * 100
-
-            #  Smooth prediction
-            #history.append(prediction)
-            #final_prediction = max(set(history), key=history.count)
             final_prediction= smooth.smooth(prediction)
 
-            print(f"{final_prediction} - {confidence:.2f}%")
+            model_loader.Check(final_prediction)
 
-            # Display (plain white text)
-            cv2.putText(panel, f"Gesture: {final_prediction}",
-                        (10, 60),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        1,
-                        (255, 255, 255),
-                        2)
-
-            cv2.putText(panel, f"Confidence: {confidence:.2f}%",
-                        (10, 120),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.8,
-                        (255, 255, 255),
-                        2)
+            if final_prediction!='Thumbs Up':
+                window.handDetected(frame,final_prediction,confidence,model_loader.mode)
+                #print(f"{final_prediction} - {confidence:.2f}%")
+            else:
+                window.switching()
 
     else:
-        cv2.putText(panel, "No Hand Detected",
-                    (10, 80),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8,
-                    (255, 255, 255),
-                    2)
-
-    # Combine webcam + panel
-    combined = np.hstack((frame, panel))
-    cv2.imshow("Hand Gesture Recognition", combined)
-
+        window.nohand()
+    window.show(frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-cap.release()
+cam.release()
 cv2.destroyAllWindows()

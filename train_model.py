@@ -28,12 +28,12 @@ y_pred = model.predict(X_test)
 
 # Accuracy
 accuracy = accuracy_score(y_test, y_pred)
-print(f"\n✅ Model Accuracy: {accuracy * 100:.2f}%\n")
+print(f"\n Model Accuracy: {accuracy * 100:.2f}%\n")
 
-# Detailed report (VERY useful 🔥)
-print("📊 Classification Report:\n")
+# Detailed report (VERY useful )
+print(" Classification Report:\n")
 print(classification_report(y_test, y_pred))
 
 # Save model
 joblib.dump(model, "Models/gesture_model.pkl")
-print("\n💾 Model saved as gesture_model.pkl")
+print("\n Model saved as gesture_model.pkl")

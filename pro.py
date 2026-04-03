@@ -4,6 +4,9 @@ import joblib
 import numpy as np
 from collections import deque
 import time
+from database import Database
+from sentenceformer import SentenceFormer
+from full_sentence import SentenceBuilder
 
 class Mediapipe:
     def __init__(self):
@@ -25,8 +28,8 @@ class ModelLoader:
         self.model_letters = joblib.load(model_let)
         self.model_numbers = joblib.load(model_num)
 
-        self.active = self.model_numbers
-        self.mode = 'NUMBERS'
+        self.active = self.model_letters
+        self.mode = 'LETTERS'
 
         self.flag = False
     
@@ -71,9 +74,9 @@ class Prediction:
 
     def calculation(self,coords,model):
             self.prediction = model.predict(coords)[0]
-            self.prob = model.predict_proba(coords)
-            self.confidence = np.max(self.prob) * 100
-            return self.prediction,self.confidence
+            prob = model.predict_proba(coords)
+            confidence = np.max(prob) * 100
+            return self.prediction,confidence
 
     def smooth(self, prediction):
         self.history.append(prediction)
@@ -82,7 +85,7 @@ class Prediction:
 
 class window:
     def __init__(self):
-        self.panel = np.zeros((480, 300, 3), dtype=np.uint8)
+        self.panel = np.zeros((480, 500, 3), dtype=np.uint8)
         self.panel[:] = (40, 40, 40)
 
     def handDetected(self,frame,final_prediction,confidence,mode):
@@ -97,9 +100,9 @@ class window:
         cv2.putText(self.panel, f"Switching Modes....",(10, 60),cv2.FONT_HERSHEY_SIMPLEX,0.8,(255, 255, 255),2)
                        
 
-    def nohand(self):
+    def nohand(self, last_sentence):
         self.panel[:] = (40, 40, 40)
-        cv2.putText(self.panel, "No Hand Detected",(10, 80),cv2.FONT_HERSHEY_SIMPLEX,0.8,(255, 255, 255),2)
+        cv2.putText(self.panel, f"Translation: {last_sentence} ",(10, 80),cv2.FONT_HERSHEY_SIMPLEX,0.8,(255, 255, 255),2)
 
     def show(self, frame):
         combined = np.hstack((frame, self.panel))
@@ -137,9 +140,16 @@ mp_draw = mp_object.mp_draw
 mp_hands = mp_object.mp_hands
 smooth = Prediction()
 window = window()
+db= Database()
+fsb=SentenceBuilder()
+raw=SentenceFormer()
 
-
-
+framecount=0
+final_prediction=""
+confidence=0
+no_hand_threshold=30
+no_hand_counter =0
+last_sentence=""
 
 while True:
 
@@ -149,16 +159,23 @@ while True:
 
     result = hands.process(rgb)
 
+    
     if result.multi_hand_landmarks:
         for hand_landmarks in result.multi_hand_landmarks:
-
+            
             landmark = landmarks(hand_landmarks,mp_draw,mp_hands,frame)
 
             coords = landmark.logic(hand_landmarks)
 
-            prediction, confidence = smooth.calculation(coords,model_loader.active)
+            framecount+=1
+            
+            if framecount%2==0:
 
-            final_prediction= smooth.smooth(prediction)
+                prediction, confidence = smooth.calculation(coords,model_loader.active)
+
+                final_prediction= smooth.smooth(prediction)
+                if final_prediction!='Thumbs Up':
+                    raw.add_gesture(final_prediction,confidence)
 
             model_loader.Check(final_prediction)
 
@@ -169,7 +186,25 @@ while True:
                 window.switching()
 
     else:
-        window.nohand()
+        no_hand_counter += 1
+        
+        if no_hand_counter >= no_hand_threshold:
+            raw_gestures = db.process_unsent()
+            
+            if raw_gestures:
+                full = fsb.build_sentence(raw_gestures)
+                
+                if full:
+                    db.mark_sent()
+                    db.sen(session_id="default", raw=raw_gestures, formed=full)
+                    last_sentence=full
+                    print(f"Formed sentence: {full}")
+            
+            no_hand_counter = 0  # Reset after processing
+
+        window.nohand(last_sentence)
+
+
     window.show(frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
